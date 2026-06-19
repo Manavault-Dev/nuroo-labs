@@ -1,0 +1,11 @@
+.env
+*.json.local
+datasets/raw/
+datasets/cleaned/
+datasets/contexts/
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.db
+*.sqlite
