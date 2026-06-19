@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """
 Clean and normalize raw Firestore export.
 

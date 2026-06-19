@@ -1,11 +1,26 @@
+# Secrets
 .env
-*.json.local
-datasets/raw/
-datasets/cleaned/
-datasets/contexts/
+*serviceAccount*.json
+*service-account*.json
+*firebase-adminsdk*.json
+
+# Datasets (real user data — never commit)
+datasets/raw/*
+datasets/cleaned/*
+datasets/contexts/*
+datasets/summaries/*
+datasets/embeddings/*
+!datasets/**/.gitkeep
+
+# Python
 __pycache__/
 *.pyc
+*.pyo
 .venv/
 venv/
+*.egg-info/
+
+# DB / misc
 *.db
 *.sqlite
+*.json.local

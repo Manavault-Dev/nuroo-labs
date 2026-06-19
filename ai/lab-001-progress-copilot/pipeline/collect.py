@@ -14,11 +14,17 @@ Usage:
     python collect.py --all --out datasets/raw/          # requires superAdmin
 """
 
+from __future__ import annotations
+
 import argparse
 import json
 import os
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Optional
+
+from dotenv import load_dotenv
+load_dotenv()
 
 import firebase_admin
 from firebase_admin import credentials, firestore
@@ -90,21 +96,22 @@ def collect_child(db: firestore.Client, user_id: str) -> dict | None:
         })
 
     # Parent feedback
-    feedback_snap = (
-        db.collection("parentFeedback")
-        .where("userId", "==", user_id)
-        .order_by("timestamp", direction=firestore.Query.DESCENDING)
-        .limit(30)
-        .stream()
-    )
     feedback = []
-    for f in feedback_snap:
-        fd = f.to_dict()
-        feedback.append({
-            "mood": fd.get("mood"),
-            "comment": fd.get("comment"),
-            "timestamp": _ts(fd.get("timestamp")),
-        })
+    try:
+        feedback_snap = (
+            db.collection("parentFeedback")
+            .where("userId", "==", user_id)
+            .stream()
+        )
+        for f in feedback_snap:
+            fd = f.to_dict()
+            feedback.append({
+                "mood": fd.get("mood"),
+                "comment": fd.get("comment"),
+                "timestamp": _ts(fd.get("timestamp")),
+            })
+    except Exception as e:
+        print(f"  ⚠️  parentFeedback skipped for {user_id}: {e}")
 
     return {
         "userId": user_id,
@@ -177,12 +184,16 @@ def main() -> None:
     elif args.org:
         records = collect_org(db, args.org)
     else:
-        all_snap = db.collection("users").stream()
+        all_snap = db.collection("users").get()
         records = []
         for u in all_snap:
-            r = collect_child(db, u.id)
-            if r:
-                records.append(r)
+            try:
+                r = collect_child(db, u.id)
+                if r:
+                    records.append(r)
+                    print(f"  ✅ {u.id}")
+            except Exception as e:
+                print(f"  ❌ {u.id}: {e}")
 
     if not records:
         print("⚠️  No records found.")
